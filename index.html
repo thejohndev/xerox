@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Xerox WhatsApp File Manager</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            margin: 0;
+            padding: 24px 30px;
+            background: #f5f6fa;
+            color: #2f3542;
+        }
+
+        h1 {
+            margin-top: 0;
+            margin-bottom: 18px;
+            font-size: 24px;
+            font-weight: 700;
+            color: #2f3542;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .label {
+            font-weight: 600;
+            margin-bottom: 6px;
+            display: block;
+            font-size: 13px;
+            color: #57606f;
+        }
+
+        .location {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+
+        input {
+            flex: 1;
+            padding: 9px 12px;
+            font-size: 14px;
+            border: 1px solid #ced6e0;
+            border-radius: 6px;
+            background: #ffffff;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #1e90ff;
+        }
+
+        button {
+            padding: 8px 18px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 6px;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .btn-browse {
+            background: #dfe4ea;
+            color: #2f3542;
+        }
+
+        .btn-browse:hover {
+            background: #ced6e0;
+        }
+
+        .status-card {
+            background: white;
+            padding: 12px 18px;
+            border-radius: 8px;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+            border: 1px solid #e4e7eb;
+        }
+
+        .status-text {
+            font-size: 14px;
+            font-weight: 600;
+            color: #57606f;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .badge-disconnected {
+            background: #ffeaa7;
+            color: #d35400;
+        }
+
+        .badge-connecting {
+            background: #74b9ff;
+            color: #0984e3;
+        }
+
+        .badge-connected {
+            background: #55efc4;
+            color: #00b894;
+        }
+
+        .badge-stopped {
+            background: #ff7675;
+            color: #d63031;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 22px;
+        }
+
+        .btn-start {
+            background: #2ed573;
+            color: white;
+            padding: 10px 24px;
+            font-size: 15px;
+        }
+
+        .btn-start:hover:not(:disabled) {
+            background: #26af5f;
+        }
+
+        .btn-stop {
+            background: #ff4757;
+            color: white;
+            padding: 10px 24px;
+            font-size: 15px;
+        }
+
+        .btn-stop:hover:not(:disabled) {
+            background: #e03b4a;
+        }
+
+        .btn-open-today {
+            background: #ffffff;
+            color: #2f3542;
+            border: 1px solid #ced6e0;
+            margin-left: auto;
+        }
+
+        .btn-open-today:hover {
+            background: #f1f2f6;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* QR Scan Section */
+        .qr-card {
+            display: none;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 22px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border: 2px dashed #70a1ff;
+        }
+
+        .qr-card h3 {
+            margin-top: 0;
+            color: #2f3542;
+            font-size: 16px;
+        }
+
+        .qr-card p {
+            color: #747d8c;
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+
+        .qr-card img {
+            width: 220px;
+            height: 220px;
+            border-radius: 8px;
+            border: 1px solid #dfe4ea;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid #e4e7eb;
+            margin: 20px 0;
+        }
+
+        /* Tree View Container */
+        .tree-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+            border: 1px solid #e4e7eb;
+        }
+
+        .tree-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #f1f2f6;
+        }
+
+        .tree-title {
+            margin: 0;
+            font-size: 17px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tree-stats {
+            display: flex;
+            gap: 8px;
+        }
+
+        .stat-pill {
+            background: #f1f2f6;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            color: #57606f;
+            font-weight: 600;
+        }
+
+        /* Customer Batch Card */
+        .batch-card {
+            border: 1px solid #e4e7eb;
+            border-radius: 8px;
+            margin-bottom: 14px;
+            overflow: hidden;
+            background: #ffffff;
+            transition: all 0.2s;
+        }
+
+        .batch-card:hover {
+            border-color: #ced6e0;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+        }
+
+        /* Customer Header (Node Root) */
+        .batch-header {
+            background: #f8f9fa;
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            border-bottom: 1px solid #eef0f3;
+        }
+
+        .batch-header:hover {
+            background: #f1f3f6;
+        }
+
+        .batch-title-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toggle-arrow {
+            font-size: 12px;
+            color: #747d8c;
+            transition: transform 0.2s;
+            width: 14px;
+            display: inline-block;
+        }
+
+        .batch-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: #2f3542;
+        }
+
+        .batch-phone-badge {
+            background: #e8f4fd;
+            color: #0984e3;
+            padding: 3px 9px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .batch-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .batch-file-badge {
+            background: #e4e7eb;
+            color: #57606f;
+            padding: 3px 9px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .btn-open-folder-icon {
+            background: #ffffff;
+            border: 1px solid #ced6e0;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #57606f;
+            cursor: pointer;
+        }
+
+        .btn-open-folder-icon:hover {
+            background: #e4e7eb;
+            color: #2f3542;
+        }
+
+        /* File Tree Branch (Node Children) */
+        .file-tree {
+            padding: 4px 0;
+            background: #ffffff;
+        }
+
+        .file-tree.collapsed {
+            display: none;
+        }
+
+        .file-tree-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 9px 18px 9px 36px;
+            border-bottom: 1px solid #f8f9fa;
+            cursor: pointer;
+            transition: background 0.15s;
+            position: relative;
+        }
+
+        .file-tree-item:last-child {
+            border-bottom: none;
+        }
+
+        .file-tree-item:hover {
+            background: #f1f8ff;
+        }
+
+        /* Branch connector line */
+        .tree-line {
+            color: #a4b0be;
+            font-family: monospace;
+            font-size: 14px;
+            margin-right: 8px;
+            user-select: none;
+        }
+
+        .file-main-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .file-icon {
+            font-size: 16px;
+        }
+
+        .file-name-text {
+            font-size: 13.5px;
+            font-weight: 600;
+            color: #2f3542;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-tree-item:hover .file-name-text {
+            color: #1e90ff;
+            text-decoration: underline;
+        }
+
+        .file-meta-info {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-left: 15px;
+        }
+
+        .file-size-text {
+            font-size: 12px;
+            color: #747d8c;
+            min-width: 60px;
+            text-align: right;
+        }
+
+        .file-time-text {
+            font-size: 12px;
+            color: #a4b0be;
+            min-width: 65px;
+            text-align: right;
+        }
+
+        .btn-file-open {
+            background: #f1f2f6;
+            color: #1e90ff;
+            border: 1px solid #dcdde1;
+            padding: 3px 9px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            opacity: 0.85;
+            transition: all 0.15s;
+        }
+
+        .file-tree-item:hover .btn-file-open {
+            background: #1e90ff;
+            color: #ffffff;
+            border-color: #1e90ff;
+            opacity: 1;
+        }
+
+        .empty-state {
+            color: #a4b0be;
+            font-style: italic;
+            padding: 30px 0;
+            text-align: center;
+            margin: 0;
+            font-size: 14px;
+        }
+
+        /* Toast notification when file is opened */
+        #toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #2f3542;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 6px;
+            font-size: 13px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: none;
+            z-index: 1000;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>
+        <span>📄 Xerox WhatsApp File Manager</span>
+    </h1>
+
+    <label class="label" for="fileLocation">File Storage Location</label>
+    <div class="location">
+        <input
+            id="fileLocation"
+            type="text"
+            placeholder="Select Xerox folder (e.g. C:\Xerox)"
+        >
+        <button id="btnBrowse" class="btn-browse">Browse</button>
+    </div>
+
+    <div class="status-card">
+        <div class="status-text">
+            WhatsApp Status:
+        </div>
+        <div id="statusBadge" class="badge badge-disconnected">
+            ● Disconnected
+        </div>
+    </div>
+
+    <!-- QR Scan Section -->
+    <div id="qrCard" class="qr-card">
+        <h3>Scan WhatsApp QR Code</h3>
+        <p>Open WhatsApp on your phone &rarr; Linked Devices &rarr; Link a Device</p>
+        <img id="qrImage" alt="WhatsApp QR Code">
+    </div>
+
+    <div class="controls">
+        <button id="btnStart" class="btn-start">▶ START</button>
+        <button id="btnStop" class="btn-stop" disabled>⏹ STOP</button>
+        <button id="btnOpenToday" class="btn-open-today">📁 Open Today's Folder</button>
+    </div>
+
+    <hr>
+
+    <!-- Tree View Structure: Customer (Name + Phone) -> Files -->
+    <div class="tree-container">
+        <div class="tree-header">
+            <h2 class="tree-title">
+                <span>📁 Today's Customer Files</span>
+            </h2>
+            <div class="tree-stats">
+                <span id="batchCountBadge" class="stat-pill">0 Customers</span>
+                <span id="fileCountBadge" class="stat-pill">0 Files</span>
+            </div>
+        </div>
+
+        <div id="batchTreeList">
+            <p class="empty-state">No files received yet today. Click START to connect WhatsApp.</p>
+        </div>
+    </div>
+
+    <div id="toast">Opening file...</div>
+
+    <script>
+        const inputLocation = document.getElementById('fileLocation');
+        const btnBrowse = document.getElementById('btnBrowse');
+        const btnStart = document.getElementById('btnStart');
+        const btnStop = document.getElementById('btnStop');
+        const btnOpenToday = document.getElementById('btnOpenToday');
+        const statusBadge = document.getElementById('statusBadge');
+        const qrCard = document.getElementById('qrCard');
+        const qrImage = document.getElementById('qrImage');
+        const batchTreeList = document.getElementById('batchTreeList');
+        const batchCountBadge = document.getElementById('batchCountBadge');
+        const fileCountBadge = document.getElementById('fileCountBadge');
+        const toast = document.getElementById('toast');
+
+        // Track collapsed states by folderName
+        const collapsedBatches = new Set();
+
+        // 1. Initial Load
+        async function init() {
+            try {
+                const config = await window.electronAPI.getConfig();
+                if (config && config.xeroxRoot) {
+                    inputLocation.value = config.xeroxRoot;
+                }
+
+                if (config && config.isRunning) {
+                    setStatus('connected');
+                } else {
+                    setStatus('stopped');
+                }
+
+                await loadBatches();
+            } catch (err) {
+                console.error('Init error:', err);
+            }
+        }
+
+        // 2. Status Badge & Buttons
+        function setStatus(status) {
+            statusBadge.className = 'badge';
+
+            switch (status) {
+                case 'connected':
+                    statusBadge.classList.add('badge-connected');
+                    statusBadge.innerText = '● Connected';
+                    btnStart.disabled = true;
+                    btnStop.disabled = false;
+                    qrCard.style.display = 'none';
+                    break;
+                case 'connecting':
+                    statusBadge.classList.add('badge-connecting');
+                    statusBadge.innerText = '● Connecting...';
+                    btnStart.disabled = true;
+                    btnStop.disabled = false;
+                    break;
+                case 'qr':
+                    statusBadge.classList.add('badge-connecting');
+                    statusBadge.innerText = '● Scan QR Code';
+                    btnStart.disabled = true;
+                    btnStop.disabled = false;
+                    qrCard.style.display = 'block';
+                    break;
+                case 'reconnecting':
+                    statusBadge.classList.add('badge-disconnected');
+                    statusBadge.innerText = '● Reconnecting...';
+                    btnStart.disabled = true;
+                    btnStop.disabled = false;
+                    break;
+                case 'stopped':
+                case 'disconnected':
+                default:
+                    statusBadge.classList.add('badge-stopped');
+                    statusBadge.innerText = '● Stopped';
+                    btnStart.disabled = false;
+                    btnStop.disabled = true;
+                    qrCard.style.display = 'none';
+                    break;
+            }
+        }
+
+        // 3. File Icon Helper
+        function getFileIcon(ext) {
+            const e = (ext || '').toLowerCase();
+            if (e === '.pdf') return '📕';
+            if (['.jpg', '.jpeg', '.png', '.webp', '.gif'].includes(e)) return '🖼️';
+            if (['.doc', '.docx', '.txt'].includes(e)) return '📝';
+            if (['.xls', '.xlsx', '.csv'].includes(e)) return '📊';
+            if (['.zip', '.rar', '.7z'].includes(e)) return '🗜️';
+            return '📄';
+        }
+
+        // 4. Format File Size Helper
+        function formatBytes(bytes) {
+            if (!bytes || bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.innerText = text;
+            return div.innerHTML;
+        }
+
+        function showToast(message) {
+            toast.innerText = message;
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 2000);
+        }
+
+        // 5. Render Tree View (Customer -> Files)
+        function renderBatches(batches) {
+            if (!batches || batches.length === 0) {
+                batchCountBadge.innerText = '0 Customers';
+                fileCountBadge.innerText = '0 Files';
+                batchTreeList.innerHTML = '<p class="empty-state">No files received yet today.</p>';
+                return;
+            }
+
+            let totalFiles = 0;
+            batches.forEach(b => { totalFiles += (b.files ? b.files.length : 0); });
+
+            batchCountBadge.innerText = `${batches.length} Customer${batches.length === 1 ? '' : 's'}`;
+            fileCountBadge.innerText = `${totalFiles} File${totalFiles === 1 ? '' : 's'}`;
+
+            batchTreeList.innerHTML = batches.map(batch => {
+                const isCollapsed = collapsedBatches.has(batch.folderName);
+                const arrow = isCollapsed ? '▶' : '▼';
+                const treeClass = isCollapsed ? 'file-tree collapsed' : 'file-tree';
+                const fileCountText = `${batch.files.length} file${batch.files.length === 1 ? '' : 's'}`;
+
+                const filesHtml = (batch.files && batch.files.length > 0)
+                    ? batch.files.map((file, idx) => {
+                        const isLast = idx === batch.files.length - 1;
+                        const branch = isLast ? '└──' : '├──';
+                        const icon = getFileIcon(file.ext);
+                        const safePath = encodeURIComponent(file.fullPath);
+
+                        return `
+                            <div class="file-tree-item" title="Click to open file" onclick="handleFileClick(event, '${safePath}')">
+                                <div class="file-main-info">
+                                    <span class="tree-line">${branch}</span>
+                                    <span class="file-icon">${icon}</span>
+                                    <span class="file-name-text">${escapeHtml(file.name)}</span>
+                                </div>
+                                <div class="file-meta-info">
+                                    <span class="file-size-text">${formatBytes(file.size)}</span>
+                                    <span class="file-time-text">${file.time || ''}</span>
+                                    <button class="btn-file-open" onclick="handleFileClick(event, '${safePath}')">Open ↗</button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')
+                    : `<div style="padding: 10px 36px; color: #a4b0be; font-size: 13px;">No files in this batch yet.</div>`;
+
+                const safeFolderPath = encodeURIComponent(batch.folderPath);
+
+                return `
+                    <div class="batch-card" data-batch="${escapeHtml(batch.folderName)}">
+                        <div class="batch-header" onclick="toggleBatch('${escapeHtml(batch.folderName)}')">
+                            <div class="batch-title-group">
+                                <span class="toggle-arrow" id="arrow-${escapeHtml(batch.folderName)}">${arrow}</span>
+                                <span class="batch-name">👤 ${escapeHtml(batch.customerName)}</span>
+                                ${batch.phone ? `<span class="batch-phone-badge">📞 ${escapeHtml(batch.phone)}</span>` : ''}
+                            </div>
+                            <div class="batch-actions">
+                                <span class="batch-file-badge">${fileCountText}</span>
+                                <button class="btn-open-folder-icon" title="Open customer folder" onclick="handleFolderClick(event, '${safeFolderPath}')">📁 Open Folder</button>
+                            </div>
+                        </div>
+                        <div class="${treeClass}" id="tree-${escapeHtml(batch.folderName)}">
+                            ${filesHtml}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Toggle Expand/Collapse for a Customer
+        function toggleBatch(folderName) {
+            const tree = document.getElementById(`tree-${folderName}`);
+            const arrow = document.getElementById(`arrow-${folderName}`);
+
+            if (!tree) return;
+
+            if (collapsedBatches.has(folderName)) {
+                collapsedBatches.delete(folderName);
+                tree.classList.remove('collapsed');
+                if (arrow) arrow.innerText = '▼';
+            } else {
+                collapsedBatches.add(folderName);
+                tree.classList.add('collapsed');
+                if (arrow) arrow.innerText = '▶';
+            }
+        }
+
+        // Open a file directly in Windows
+        async function handleFileClick(event, encodedPath) {
+            event.stopPropagation();
+            const filePath = decodeURIComponent(encodedPath);
+            showToast('Opening ' + filePath.split('\\').pop() + '...');
+            try {
+                await window.electronAPI.openFile(filePath);
+            } catch (err) {
+                console.error('Error opening file:', err);
+            }
+        }
+
+        // Open a customer folder in Windows Explorer
+        async function handleFolderClick(event, encodedPath) {
+            event.stopPropagation();
+            const folderPath = decodeURIComponent(encodedPath);
+            try {
+                await window.electronAPI.openFolder(folderPath);
+            } catch (err) {
+                console.error('Error opening folder:', err);
+            }
+        }
+
+        async function loadBatches() {
+            try {
+                const batches = await window.electronAPI.getTodayBatches();
+                renderBatches(batches);
+            } catch (err) {
+                console.error('Error loading batches:', err);
+            }
+        }
+
+        // 6. Button Listeners
+        btnBrowse.addEventListener('click', async () => {
+            const selected = await window.electronAPI.selectFolder();
+            if (selected) {
+                inputLocation.value = selected;
+                await loadBatches();
+            }
+        });
+
+        inputLocation.addEventListener('change', async () => {
+            await window.electronAPI.setLocation(inputLocation.value);
+            await loadBatches();
+        });
+
+        btnStart.addEventListener('click', async () => {
+            setStatus('connecting');
+            const res = await window.electronAPI.startService();
+            if (!res.success) {
+                alert('Failed to start WhatsApp: ' + res.error);
+                setStatus('stopped');
+            }
+        });
+
+        btnStop.addEventListener('click', async () => {
+            btnStop.disabled = true;
+            await window.electronAPI.stopService();
+            setStatus('stopped');
+        });
+
+        btnOpenToday.addEventListener('click', async () => {
+            await window.electronAPI.openFolder();
+        });
+
+        // 7. IPC Events from Main Process
+        window.electronAPI.onStatusUpdate((status) => {
+            setStatus(status);
+        });
+
+        window.electronAPI.onQrUpdate((qrDataUrl) => {
+            if (qrDataUrl) {
+                qrImage.src = qrDataUrl;
+                qrCard.style.display = 'block';
+                statusBadge.innerText = '● Scan QR Code';
+            } else {
+                qrCard.style.display = 'none';
+            }
+        });
+
+        window.electronAPI.onFileReceived(() => {
+            // Live reload customer tree when new file arrives
+            loadBatches();
+        });
+
+        init();
+    </script>
+</body>
+</html>

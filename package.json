@@ -1,0 +1,49 @@
+{
+  "name": "xerox",
+  "version": "1.0.0",
+  "description": "WhatsApp Xerox File Management System",
+  "main": "electron-main.js",
+  "scripts": {
+    "start": "electron .",
+    "cli": "node index.js",
+    "electron": "electron electron-main.js",
+    "build": "electron-builder --win portable",
+    "build:installer": "electron-builder --win nsis",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "build": {
+    "appId": "com.xerox.whatsapp",
+    "productName": "Xerox WhatsApp",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "portable"
+    },
+    "asar": true,
+    "files": [
+      "electron-main.js",
+      "preload.js",
+      "index.html",
+      "src/**/*",
+      "package.json",
+      "!auth/**/*",
+      "!dist/**/*"
+    ]
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.7.16",
+    "dotenv": "^16.4.7",
+    "pino": "^9.6.0",
+    "qrcode": "^1.5.4",
+    "qrcode-terminal": "^0.12.0"
+  },
+  "devDependencies": {
+    "electron": "^44.5.1",
+    "electron-builder": "^26.15.3"
+  }
+}

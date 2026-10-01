@@ -28,11 +28,11 @@ async function main() {
     // Step 1: Ensure root structure
     await filesystem.ensureRootStructure();
 
-    // Step 2: Archive previous days
-    await filesystem.archivePreviousDays();
-
-    // Step 3: Create today's folder
+    // Step 2: Create today's folder
     await filesystem.ensureTodayFolder();
+
+    // Step 3: Archive previous days
+    await filesystem.archivePreviousDays();
 
     // Step 4: Recover state from existing folders
     await filesystem.recoverState();

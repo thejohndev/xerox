@@ -24,7 +24,9 @@
     "files": [
       "electron-main.js",
       "preload.js",
+      "print-preload.js",
       "index.html",
+      "print.html",
       "src/**/*",
       "package.json",
       "!auth/**/*",

@@ -1,0 +1,1587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Xerox Print Studio - Interactive Layout</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #202024;
+            color: #f1f2f6;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        /* ═══════════ LEFT SIDEBAR ═══════════ */
+        .sidebar {
+            width: 340px;
+            min-width: 340px;
+            background: #2a2b30;
+            border-right: 1px solid #3a3b40;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            z-index: 10;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.3);
+        }
+
+        .sidebar-header {
+            padding: 16px 20px;
+            background: #1e1f23;
+            border-bottom: 1px solid #3a3b40;
+        }
+
+        .sidebar-header h2 {
+            font-size: 16px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #ffffff;
+        }
+
+        .sidebar-header .customer-meta {
+            font-size: 13px;
+            color: #a4b0be;
+            margin-top: 4px;
+        }
+
+        .sidebar-header .customer-meta b {
+            color: #70a1ff;
+        }
+
+        .control-group {
+            padding: 12px 18px;
+            border-bottom: 1px solid #35363c;
+        }
+
+        .group-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: #a4b0be;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin-bottom: 7px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        select, input[type="number"] {
+            width: 100%;
+            padding: 8px 10px;
+            font-size: 13px;
+            border: 1px solid #484a52;
+            border-radius: 6px;
+            background: #1e1f23;
+            color: #f1f2f6;
+            cursor: pointer;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #3867d6;
+        }
+
+        /* Toggles */
+        .btn-toggle-row {
+            display: flex;
+            gap: 6px;
+        }
+
+        .toggle-btn {
+            flex: 1;
+            padding: 8px 4px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid #484a52;
+            border-radius: 6px;
+            background: #1e1f23;
+            color: #a4b0be;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.15s;
+        }
+
+        .toggle-btn.active {
+            background: #3867d6;
+            color: #ffffff;
+            border-color: #3867d6;
+        }
+
+        .toggle-btn:hover:not(.active) {
+            background: #35363c;
+            color: #ffffff;
+        }
+
+        /* Radio Options */
+        .radio-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            color: #dcdde1;
+        }
+
+        .radio-item:hover {
+            background: #35363c;
+        }
+
+        /* Nudge & Move Pad */
+        .nudge-container {
+            background: #1e1f23;
+            border: 1px solid #3e4048;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 6px;
+        }
+
+        .nudge-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+            width: 140px;
+            margin: 0 auto;
+        }
+
+        .nudge-btn {
+            background: #2f3542;
+            color: #f1f2f6;
+            border: 1px solid #484a52;
+            padding: 7px;
+            font-size: 12px;
+            font-weight: 700;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .nudge-btn:hover {
+            background: #3867d6;
+            border-color: #3867d6;
+        }
+
+        .nudge-info-text {
+            font-size: 11px;
+            color: #70a1ff;
+            text-align: center;
+            margin-top: 8px;
+            line-height: 1.4;
+        }
+
+        .align-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .align-btn {
+            flex: 1;
+            padding: 5px;
+            font-size: 11px;
+            font-weight: 600;
+            background: #35363c;
+            color: #dcdde1;
+            border: 1px solid #484a52;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .align-btn:hover {
+            background: #484a52;
+            color: #fff;
+        }
+
+        /* Sliders */
+        .range-slider-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 6px;
+        }
+
+        .range-slider-row input[type="range"] {
+            flex: 1;
+            cursor: pointer;
+            accent-color: #3867d6;
+        }
+
+        .range-value {
+            font-size: 12px;
+            color: #a4b0be;
+            min-width: 42px;
+            text-align: right;
+            font-weight: 600;
+        }
+
+        /* Thumbnails Strip */
+        .thumb-section {
+            padding: 12px 18px;
+            flex: 1;
+            min-height: 130px;
+            overflow-y: auto;
+        }
+
+        .thumb-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .thumb-card {
+            width: 88px;
+            background: #1e1f23;
+            border: 1.5px solid #484a52;
+            border-radius: 6px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .thumb-card.active {
+            border-color: #2ed573;
+            box-shadow: 0 0 0 1px #2ed573;
+        }
+
+        .thumb-card.disabled {
+            opacity: 0.35;
+        }
+
+        .thumb-img-wrap {
+            width: 100%;
+            height: 54px;
+            cursor: pointer;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #141517;
+        }
+
+        .thumb-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.2s;
+        }
+
+        .thumb-check {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 15px;
+            height: 15px;
+            background: #2ed573;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            font-weight: 700;
+        }
+
+        .thumb-card.disabled .thumb-check {
+            display: none;
+        }
+
+        .thumb-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #25262c;
+            padding: 3px 5px;
+            border-top: 1px solid #35363c;
+        }
+
+        .thumb-rotate-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 11px;
+            color: #a4b0be;
+            padding: 1px 3px;
+        }
+
+        .thumb-rotate-btn:hover {
+            color: #70a1ff;
+        }
+
+        .thumb-only-btn {
+            background: #35363c;
+            border: 1px solid #484a52;
+            cursor: pointer;
+            font-size: 9.5px;
+            color: #70a1ff;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-weight: 600;
+        }
+
+        .thumb-only-btn:hover {
+            background: #1e90ff;
+            color: #ffffff;
+            border-color: #1e90ff;
+        }
+
+        .thumb-num {
+            font-size: 10px;
+            color: #747d8c;
+            font-weight: 600;
+        }
+
+        .thumb-copies-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #18191c;
+            border-top: 1px solid #35363c;
+            padding: 2px 4px;
+        }
+
+        .btn-copy-step {
+            background: #2f3542;
+            color: #f1f2f6;
+            border: 1px solid #484a52;
+            width: 18px;
+            height: 18px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .btn-copy-step:hover {
+            background: #3867d6;
+            border-color: #3867d6;
+        }
+
+        .copy-count-text {
+            font-size: 10px;
+            font-weight: 600;
+            color: #2ed573;
+        }
+
+        /* PDF Document Card in Sidebar */
+        .pdf-card {
+            background: #1e1f23;
+            border: 1px solid #484a52;
+            border-radius: 6px;
+            padding: 8px 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .pdf-info {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            overflow: hidden;
+            flex: 1;
+        }
+
+        .pdf-name {
+            font-size: 12px;
+            color: #f1f2f6;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-weight: 500;
+        }
+
+        .btn-print-pdf-item {
+            background: #0984e3;
+            color: #ffffff;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 9px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .btn-print-pdf-item:hover {
+            background: #0770c2;
+        }
+
+        /* Bottom Action Buttons */
+        .sidebar-bottom {
+            padding: 14px 18px;
+            border-top: 1px solid #3a3b40;
+            background: #232428;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-print-action {
+            flex: 1;
+            padding: 11px;
+            font-size: 15px;
+            font-weight: 700;
+            background: #2ed573;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: background 0.15s;
+        }
+
+        .btn-print-action:hover {
+            background: #26af5f;
+        }
+
+        .btn-close-action {
+            padding: 11px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            background: #35363c;
+            color: #dcdde1;
+            border: 1px solid #484a52;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .btn-close-action:hover {
+            background: #484a52;
+            color: #fff;
+        }
+
+        /* ═══════════ RIGHT WORKSPACE CANVAS ═══════════ */
+        .workspace {
+            flex: 1;
+            background: #18191c;
+            overflow-y: auto;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+            position: relative;
+        }
+
+        .canvas-toolbar {
+            font-size: 12.5px;
+            color: #ced6e0;
+            background: #2a2b30;
+            padding: 7px 16px;
+            border-radius: 20px;
+            border: 1px solid #3a3b40;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .canvas-toolbar span b {
+            color: #2ed573;
+        }
+
+        /* Realistic Paper Sheet with Dynamic Dimensions */
+        .paper-sheet {
+            background: #ffffff;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 1px 4px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+            box-sizing: border-box;
+            border-radius: 2px;
+            transition: width 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), height 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            margin: 0 auto;
+        }
+
+        /* Printable Margins Indicator (Dashed subtle border) */
+        .paper-margin-guide {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none;
+            border: 1px dashed rgba(0, 120, 215, 0.2);
+            box-sizing: border-box;
+        }
+
+        /* Draggable Photo Item */
+        .photo-item {
+            position: absolute;
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+            transition: box-shadow 0.1s;
+            touch-action: none;
+        }
+
+        .photo-item:active {
+            cursor: grabbing;
+        }
+
+        .photo-item.selected {
+            outline: 2px solid #1e90ff;
+            outline-offset: 1px;
+            z-index: 50;
+        }
+
+        /* Corner Handles */
+        .photo-item.selected::before {
+            content: '';
+            position: absolute;
+            top: -4px; left: -4px; width: 8px; height: 8px;
+            background: #1e90ff;
+            border: 1px solid #fff;
+            border-radius: 50%;
+        }
+
+        .photo-item.selected::after {
+            content: '';
+            position: absolute;
+            bottom: -4px; right: -4px; width: 8px; height: 8px;
+            background: #1e90ff;
+            border: 1px solid #fff;
+            border-radius: 50%;
+        }
+
+        .photo-item img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            pointer-events: none;
+            display: block;
+        }
+
+        .photo-item.fit-cover img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo-item.fit-stretch img {
+            width: 100%;
+            height: 100%;
+            object-fit: fill;
+        }
+
+        /* Grayscale photocopy mode */
+        body.mode-grayscale .photo-item img {
+            filter: grayscale(100%) contrast(120%);
+        }
+
+        .item-info-badge {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: rgba(30, 144, 255, 0.85);
+            color: #ffffff;
+            font-size: 9px;
+            padding: 1px 5px;
+            border-radius: 3px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.15s;
+        }
+
+        .photo-item.selected .item-info-badge,
+        .photo-item:hover .item-info-badge {
+            opacity: 1;
+        }
+
+        .sheet-label {
+            position: absolute;
+            bottom: 4px;
+            right: 8px;
+            font-size: 10px;
+            color: #a4b0be;
+            pointer-events: none;
+            font-weight: 600;
+        }
+
+        /* Loading */
+        .loading-screen {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(24, 25, 28, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            font-size: 15px;
+            color: #f1f2f6;
+            z-index: 1000;
+        }
+
+        /* ═══════════ PHYSICAL PRINT STYLES ═══════════ */
+        @media print {
+            @page {
+                size: auto;
+                margin: 0mm;
+            }
+
+            html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: white !important;
+                overflow: visible !important;
+            }
+
+            .sidebar, .canvas-toolbar, .loading-screen, .sheet-label, .paper-margin-guide, .item-info-badge {
+                display: none !important;
+            }
+
+            .workspace {
+                padding: 0 !important;
+                margin: 0 !important;
+                background: white !important;
+                overflow: visible !important;
+                display: block !important;
+            }
+
+            .paper-sheet {
+                box-shadow: none !important;
+                border: none !important;
+                width: 100vw !important;
+                height: 100vh !important;
+                max-width: 100vw !important;
+                max-height: 100vh !important;
+                margin: 0 !important;
+                page-break-after: always !important;
+                break-after: page !important;
+                overflow: hidden !important;
+            }
+
+            .paper-sheet:last-child {
+                page-break-after: avoid !important;
+                break-after: avoid !important;
+            }
+
+            .photo-item {
+                outline: none !important;
+                cursor: default !important;
+            }
+
+            .photo-item::before, .photo-item::after {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loadingScreen" class="loading-screen">
+        <div>⏳ Loading customer photos...</div>
+    </div>
+
+    <!-- ═══════════ SIDEBAR CONTROLS ═══════════ -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2>🖨️ Xerox Print Studio</h2>
+            <div class="customer-meta">
+                Customer: <b id="customerName">...</b> · <span id="customerPhone">...</span>
+            </div>
+        </div>
+
+        <!-- 1. Layout Mode -->
+        <div class="control-group">
+            <div class="group-title">Layout Template</div>
+            <select id="layoutSelect">
+                <option value="custom" selected>🎨 Custom Layout (Drag & Move with Mouse/Arrows)</option>
+                <option value="1">1 per page (Full Page)</option>
+                <option value="2-h">2 per page (Side by Side — 2 cols)</option>
+                <option value="2-v">2 per page (Top & Bottom — Aadhaar / ID Card)</option>
+                <option value="3-h">3 per page (Side by Side)</option>
+                <option value="3-v">3 per page (Stacked)</option>
+                <option value="4">4 per page (2×2 Grid)</option>
+                <option value="6">6 per page (2×3 Grid)</option>
+                <option value="8">8 per page (2×4 Grid)</option>
+                <option value="all">Fit all photos on 1 page</option>
+            </select>
+        </div>
+
+        <!-- 2. Photo Size Preset -->
+        <div class="control-group">
+            <div class="group-title">Photo Size Preset</div>
+            <select id="sizePresetSelect">
+                <option value="fit" selected>Fit to Margin (Centered)</option>
+                <option value="id-card">ID Card / Aadhaar Size (86 × 54 mm)</option>
+                <option value="passport">Passport Photo (35 × 45 mm)</option>
+                <option value="4x6">4 × 6 inches (10 × 15 cm)</option>
+                <option value="5x7">5 × 7 inches (13 × 18 cm)</option>
+                <option value="full">Full Page (Edge to Edge)</option>
+                <option value="custom">Custom Scale</option>
+            </select>
+            <div class="range-slider-row" id="scaleRow">
+                <input type="range" id="scaleRange" min="20" max="150" value="100">
+                <span id="scaleValue" class="range-value">100%</span>
+            </div>
+        </div>
+
+        <!-- 3. Move & Nudge Controls (Mouse / Keyboard) -->
+        <div class="control-group" id="nudgeSection">
+            <div class="group-title">
+                <span>Move Photo Position</span>
+                <span id="activePhotoTag" style="color: #70a1ff; font-weight: normal; font-size: 11px;">#1 Selected</span>
+            </div>
+
+            <div class="nudge-container">
+                <div class="nudge-grid">
+                    <div></div>
+                    <button class="nudge-btn" onclick="nudgeActive(0, -2)" title="Move Up (Arrow Up)">⬆</button>
+                    <div></div>
+
+                    <button class="nudge-btn" onclick="nudgeActive(-2, 0)" title="Move Left (Arrow Left)">⬅</button>
+                    <button class="nudge-btn" onclick="centerActive()" title="Center on Paper" style="font-size: 10px;">Center</button>
+                    <button class="nudge-btn" onclick="nudgeActive(2, 0)" title="Move Right (Arrow Right)">➡</button>
+
+                    <div></div>
+                    <button class="nudge-btn" onclick="nudgeActive(0, 2)" title="Move Down (Arrow Down)">⬇</button>
+                    <div></div>
+                </div>
+
+                <div class="align-actions">
+                    <button class="align-btn" onclick="alignActive('top')">Align Top</button>
+                    <button class="align-btn" onclick="alignActive('center-h')">Center Horiz</button>
+                    <button class="align-btn" onclick="alignActive('center-v')">Center Vert</button>
+                    <button class="align-btn" onclick="alignActive('bottom')">Align Bottom</button>
+                </div>
+
+                <div class="nudge-info-text">
+                    💡 <b>Tip:</b> Click photo on paper to drag with mouse, or press <b>⬅ ⬆ ⬇ ➡ Arrow keys</b> to move!
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Color & Photocopy Mode -->
+        <div class="control-group">
+            <div class="group-title">Color Mode</div>
+            <div class="btn-toggle-row">
+                <button class="toggle-btn active" id="btnColor" onclick="setColorMode('color')">🎨 Color</button>
+                <button class="toggle-btn" id="btnBW" onclick="setColorMode('bw')">⬛ B&W / Photocopy</button>
+            </div>
+        </div>
+
+        <!-- 5. Orientation -->
+        <div class="control-group">
+            <div class="group-title">Paper Orientation</div>
+            <div class="btn-toggle-row">
+                <button class="toggle-btn active" id="btnPortrait" onclick="setOrientation('portrait')">📄 Portrait</button>
+                <button class="toggle-btn" id="btnLandscape" onclick="setOrientation('landscape')">📄 Landscape</button>
+            </div>
+        </div>
+
+        <!-- 6. Paper Size -->
+        <div class="control-group">
+            <div class="group-title">Paper Size</div>
+            <select id="paperSizeSelect">
+                <option value="A4" selected>A4 (210 × 297 mm) — Standard Xerox</option>
+                <option value="Legal">Legal (8.5 × 14 in) — Bond Paper</option>
+                <option value="Letter">Letter (8.5 × 11 in)</option>
+                <option value="A3">A3 (297 × 420 mm) — Large</option>
+                <option value="A5">A5 (148 × 210 mm) — Small</option>
+            </select>
+        </div>
+
+        <!-- 7. Page Margins -->
+        <div class="control-group">
+            <div class="group-title">Page Margin (mm)</div>
+            <select id="marginPresetSelect">
+                <option value="5" selected>Normal (5 mm)</option>
+                <option value="3">Narrow (3 mm)</option>
+                <option value="0">None (0 mm — Borderless)</option>
+                <option value="10">Wide (10 mm)</option>
+                <option value="custom">Custom Margin...</option>
+            </select>
+            <div class="range-slider-row" id="customMarginRow" style="display: none; margin-top: 8px;">
+                <input type="number" id="customMarginInput" value="5" min="0" max="30">
+                <span class="range-value">mm</span>
+            </div>
+        </div>
+
+        <!-- 8. Image Fit Mode -->
+        <div class="control-group">
+            <div class="group-title">Image Scaling</div>
+            <div class="radio-stack">
+                <label class="radio-item">
+                    <input type="radio" name="imgFit" value="contain" checked> Fit complete photo (No cropping)
+                </label>
+                <label class="radio-item">
+                    <input type="radio" name="imgFit" value="cover"> Fill area (Crop edges if needed)
+                </label>
+                <label class="radio-item">
+                    <input type="radio" name="imgFit" value="stretch"> Stretch to fill
+                </label>
+            </div>
+        </div>
+
+        <!-- PDF Documents Section (Shows when PDFs are in batch) -->
+        <div class="control-group" id="pdfSection" style="display: none;">
+            <div class="group-title">
+                <span>📕 PDF Documents (<span id="pdfCount">0</span>)</span>
+                <span style="font-weight: normal; font-size: 10.5px; color: #ff7675;">Multipage</span>
+            </div>
+            <div id="pdfList" style="display: flex; flex-direction: column; gap: 8px;"></div>
+        </div>
+
+        <!-- 9. Customer Photos Selector, Copies & 90° Rotation -->
+        <div class="thumb-section">
+            <div class="group-title">
+                <span>Customer Photos (<span id="selectedCount">0</span>)</span>
+                <div style="display: flex; gap: 6px; font-weight: normal; font-size: 11px;">
+                    <a href="javascript:void(0)" onclick="selectAllPhotos()" style="color: #70a1ff; text-decoration: none;">Select All</a>
+                    <span style="color: #484a52;">·</span>
+                    <a href="javascript:void(0)" onclick="resetAllCopies()" style="color: #a4b0be; text-decoration: none;">1 Copy</a>
+                </div>
+            </div>
+            <div class="thumb-grid" id="thumbGrid"></div>
+        </div>
+
+        <!-- Bottom Print & Close -->
+        <div class="sidebar-bottom">
+            <button class="btn-print-action" onclick="doPrint()">
+                🖨️ Send to Printer
+            </button>
+            <button class="btn-close-action" onclick="doCancel()">
+                Close
+            </button>
+        </div>
+    </div>
+
+    <!-- ═══════════ RIGHT WORKSPACE ═══════════ -->
+    <div class="workspace" id="workspace" tabindex="0">
+        <div class="canvas-toolbar">
+            <span>📄 Real A4 Paper Preview</span>
+            <span>·</span>
+            <span id="canvasSummary">1 Page · 1 Photo</span>
+            <span>·</span>
+            <span>Use <b>Mouse to Drag</b> or <b>Arrow Keys</b> to adjust position</span>
+        </div>
+
+        <div id="sheetsContainer"></div>
+    </div>
+
+    <script>
+        // ═══════════ STATE ═══════════
+        let batchData = null;
+        let images = []; // Array of { id, name, dataUrl, ext, selected, rotation, copies }
+        let pdfFiles = []; // Array of PDF files in this batch
+        let itemInstancePositions = new Map(); // instanceKey -> { xPct, yPct, widthPct, heightPct }
+        let activeItems = []; // Flattened active items with copies expanded
+        let selectedItemIndex = 0;
+        let orientation = 'portrait';
+        let colorMode = 'color';
+        let activeMarginMm = 5;
+
+        const IMAGE_EXTS = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp'];
+
+        // ═══════════ INITIALIZATION ═══════════
+        async function init() {
+            try {
+                batchData = await window.printAPI.getBatchData();
+                if (!batchData) {
+                    document.getElementById('loadingScreen').innerHTML = '<div>No data received.</div>';
+                    return;
+                }
+
+                document.getElementById('customerName').innerText = batchData.customerName || 'Customer';
+                document.getElementById('customerPhone').innerText = batchData.phone || '';
+
+                const files = batchData.files || [];
+                const loaded = [];
+                pdfFiles = [];
+
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    const ext = (file.ext || '').toLowerCase();
+                    if (ext === '.pdf') {
+                        pdfFiles.push(file);
+                    } else if (IMAGE_EXTS.includes(ext)) {
+                        const res = await window.printAPI.readFileBase64(file.fullPath);
+                        if (res && res.success) {
+                            loaded.push({
+                                id: 'img_' + i,
+                                name: file.name,
+                                dataUrl: res.dataUrl,
+                                ext: ext,
+                                selected: true,
+                                rotation: 0,
+                                copies: 1, // Default 1 copy
+                            });
+                        }
+                    }
+                }
+
+                images = loaded;
+                document.getElementById('loadingScreen').style.display = 'none';
+
+                renderPdfSection();
+                applyLayoutPreset();
+                renderThumbnails();
+                renderCanvas();
+                setupGlobalKeyboard();
+
+                // Listeners
+                document.getElementById('layoutSelect').addEventListener('change', () => {
+                    applyLayoutPreset();
+                    renderCanvas();
+                });
+                document.getElementById('paperSizeSelect').addEventListener('change', () => {
+                    applyLayoutPreset();
+                    renderCanvas();
+                });
+                document.getElementById('sizePresetSelect').addEventListener('change', (e) => {
+                    applySizePreset(e.target.value);
+                });
+                document.getElementById('scaleRange').addEventListener('input', (e) => {
+                    document.getElementById('scaleValue').innerText = e.target.value + '%';
+                    scaleActivePhoto(parseInt(e.target.value) / 100);
+                });
+                document.getElementById('marginPresetSelect').addEventListener('change', (e) => {
+                    if (e.target.value === 'custom') {
+                        document.getElementById('customMarginRow').style.display = 'flex';
+                        activeMarginMm = parseInt(document.getElementById('customMarginInput').value) || 0;
+                    } else {
+                        document.getElementById('customMarginRow').style.display = 'none';
+                        activeMarginMm = parseInt(e.target.value) || 0;
+                    }
+                    applyLayoutPreset();
+                    renderCanvas();
+                });
+                document.getElementById('customMarginInput').addEventListener('input', (e) => {
+                    activeMarginMm = Math.max(0, parseInt(e.target.value) || 0);
+                    applyLayoutPreset();
+                    renderCanvas();
+                });
+                document.querySelectorAll('input[name="imgFit"]').forEach(r => {
+                    r.addEventListener('change', renderCanvas);
+                });
+            } catch (err) {
+                console.error('Init error:', err);
+            }
+        }
+
+        // ═══════════ PDF DOCUMENTS SECTION ═══════════
+        function renderPdfSection() {
+            const section = document.getElementById('pdfSection');
+            const list = document.getElementById('pdfList');
+            const count = document.getElementById('pdfCount');
+            if (!section || !list) return;
+
+            if (pdfFiles.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+
+            section.style.display = 'block';
+            if (count) count.innerText = pdfFiles.length;
+
+            list.innerHTML = pdfFiles.map((pdf, idx) => {
+                return `
+                    <div class="pdf-card">
+                        <div class="pdf-info">
+                            <span style="font-size: 16px;">📕</span>
+                            <div class="pdf-name" title="${escapeHtml(pdf.name)}">${escapeHtml(pdf.name)}</div>
+                        </div>
+                        <button class="btn-print-pdf-item" onclick="openPdfPrintByIndex(${idx})">🖨️ Print PDF</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function openPdfPrintByIndex(idx) {
+            const pdf = pdfFiles[idx];
+            if (!pdf) return;
+            try {
+                await window.printAPI.printPdf({ filePath: pdf.fullPath, fileName: pdf.name });
+            } catch (err) {
+                console.error('Error opening PDF print:', err);
+            }
+        }
+
+        // ═══════════ COLOR & ORIENTATION ═══════════
+        function setColorMode(mode) {
+            colorMode = mode;
+            document.body.classList.toggle('mode-grayscale', mode === 'bw');
+            document.getElementById('btnColor').classList.toggle('active', mode === 'color');
+            document.getElementById('btnBW').classList.toggle('active', mode === 'bw');
+        }
+
+        function setOrientation(o) {
+            orientation = o;
+            document.getElementById('btnPortrait').classList.toggle('active', o === 'portrait');
+            document.getElementById('btnLandscape').classList.toggle('active', o === 'landscape');
+            applyLayoutPreset();
+            renderCanvas();
+        }
+
+        // ═══════════ THUMBNAILS, ROTATION & COPIES ═══════════
+        function renderThumbnails() {
+            const grid = document.getElementById('thumbGrid');
+            const activeCount = images.filter(img => img.selected).length;
+            document.getElementById('selectedCount').innerText = `${activeCount}/${images.length}`;
+
+            grid.innerHTML = images.map((img, idx) => {
+                const cardClass = img.selected ? 'thumb-card active' : 'thumb-card disabled';
+                return `
+                    <div class="${cardClass}">
+                        <div class="thumb-img-wrap" onclick="toggleThumbSelect(${idx})" title="Click to include/exclude">
+                            <img src="${img.dataUrl}" style="transform: rotate(${img.rotation}deg);" alt="">
+                            <div class="thumb-check">✓</div>
+                        </div>
+                        <div class="thumb-toolbar">
+                            <span class="thumb-num">#${idx + 1}</span>
+                            <button class="thumb-rotate-btn" onclick="rotateThumb(${idx})" title="Rotate 90°">⟳</button>
+                            <button class="thumb-only-btn" onclick="selectOnlyThis(${idx})" title="Select ONLY this photo">Only</button>
+                        </div>
+                        <div class="thumb-copies-bar">
+                            <button class="btn-copy-step" onclick="changeCopies(${idx}, -1)" title="Fewer copies">-</button>
+                            <span class="copy-count-text">${img.copies || 1} ${img.copies === 1 ? 'copy' : 'copies'}</span>
+                            <button class="btn-copy-step" onclick="changeCopies(${idx}, 1)" title="More copies">+</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleThumbSelect(idx) {
+            images[idx].selected = !images[idx].selected;
+            renderThumbnails();
+            applyLayoutPreset();
+            renderCanvas();
+        }
+
+        function rotateThumb(idx) {
+            images[idx].rotation = (images[idx].rotation + 90) % 360;
+            renderThumbnails();
+            renderCanvas();
+        }
+
+        function changeCopies(idx, delta) {
+            const img = images[idx];
+            if (!img) return;
+            const newCount = Math.min(16, Math.max(1, (img.copies || 1) + delta));
+            img.copies = newCount;
+            img.selected = true; // Auto-select if adjusting copies
+            renderThumbnails();
+            applyLayoutPreset();
+            renderCanvas();
+        }
+
+        function selectOnlyThis(idx) {
+            images.forEach((img, i) => {
+                img.selected = (i === idx);
+            });
+            selectedItemIndex = 0;
+            renderThumbnails();
+            applyLayoutPreset();
+            renderCanvas();
+        }
+
+        function selectAllPhotos() {
+            images.forEach(img => { img.selected = true; });
+            renderThumbnails();
+            applyLayoutPreset();
+            renderCanvas();
+        }
+
+        function resetAllCopies() {
+            images.forEach(img => { img.copies = 1; });
+            renderThumbnails();
+            applyLayoutPreset();
+            renderCanvas();
+        }
+
+        // ═══════════ PAPER SIZES & PHYSICAL DIMENSIONS ═══════════
+        const PAPER_DEFINITIONS = {
+            'A4': { name: 'A4', widthMm: 210, heightMm: 297, label: 'A4 (210 × 297 mm) — Standard Xerox' },
+            'Legal': { name: 'Legal', widthMm: 216, heightMm: 356, label: 'Legal (8.5 × 14 in) — Bond Paper' },
+            'Letter': { name: 'Letter', widthMm: 216, heightMm: 279, label: 'Letter (8.5 × 11 in)' },
+            'A3': { name: 'A3', widthMm: 297, heightMm: 420, label: 'A3 (297 × 420 mm) — Large' },
+            'A5': { name: 'A5', widthMm: 148, heightMm: 210, label: 'A5 (148 × 210 mm) — Small' },
+        };
+
+        function getActivePaperDef() {
+            const key = document.getElementById('paperSizeSelect')?.value || 'A4';
+            return PAPER_DEFINITIONS[key] || PAPER_DEFINITIONS['A4'];
+        }
+
+        function getActivePaperDimensions() {
+            const def = getActivePaperDef();
+            if (orientation === 'landscape') {
+                return { widthMm: def.heightMm, heightMm: def.widthMm, def };
+            }
+            return { widthMm: def.widthMm, heightMm: def.heightMm, def };
+        }
+
+        // Flatten active images by their copies count
+        function getFlattenedActiveItems() {
+            const list = [];
+            images.forEach((img, imgIdx) => {
+                if (!img.selected) return;
+                const copyCount = Math.max(1, img.copies || 1);
+                for (let c = 0; c < copyCount; c++) {
+                    const instanceKey = `${img.id}_c${c}`;
+                    let pos = itemInstancePositions.get(instanceKey);
+                    if (!pos) {
+                        pos = {
+                            xPct: 5,
+                            yPct: 5,
+                            widthPct: 90,
+                            heightPct: 90,
+                        };
+                        itemInstancePositions.set(instanceKey, pos);
+                    }
+                    list.push({
+                        ...img,
+                        instanceKey,
+                        copyIndex: c,
+                        totalCopies: copyCount,
+                        sourceIndex: imgIdx,
+                        pos,
+                    });
+                }
+            });
+            return list;
+        }
+
+        // ═══════════ LAYOUT CALCULATIONS ═══════════
+        function applyLayoutPreset() {
+            const layoutKey = document.getElementById('layoutSelect').value;
+            activeItems = getFlattenedActiveItems();
+
+            if (activeItems.length === 0) return;
+
+            const { widthMm: paperW, heightMm: paperH } = getActivePaperDimensions();
+
+            // Margin percentage based on actual paper width & height
+            const mPctX = (activeMarginMm / paperW) * 100;
+            const mPctY = (activeMarginMm / paperH) * 100;
+            const availW = Math.max(10, 100 - (mPctX * 2));
+            const availH = Math.max(10, 100 - (mPctY * 2));
+
+            if (layoutKey === '1' || (layoutKey === 'custom' && activeItems.length === 1)) {
+                // Centered Full Page
+                activeItems.forEach(item => {
+                    item.pos.widthPct = availW;
+                    item.pos.heightPct = availH;
+                    item.pos.xPct = mPctX;
+                    item.pos.yPct = mPctY;
+                });
+            } else if (layoutKey === '2-h') {
+                // 2 per page - Side by Side (Horizontal)
+                const w = (availW - 2) / 2;
+                activeItems.forEach((item, idx) => {
+                    const col = idx % 2;
+                    item.pos.widthPct = w;
+                    item.pos.heightPct = availH;
+                    item.pos.xPct = mPctX + col * (w + 2);
+                    item.pos.yPct = mPctY;
+                });
+            } else if (layoutKey === '2-v') {
+                // 2 per page - Stacked (Top & Bottom, like ID card front & back)
+                const h = (availH - 2) / 2;
+                activeItems.forEach((item, idx) => {
+                    const row = idx % 2;
+                    item.pos.widthPct = availW;
+                    item.pos.heightPct = h;
+                    item.pos.xPct = mPctX;
+                    item.pos.yPct = mPctY + row * (h + 2);
+                });
+            } else if (layoutKey === '3-h') {
+                const w = (availW - 4) / 3;
+                activeItems.forEach((item, idx) => {
+                    const col = idx % 3;
+                    item.pos.widthPct = w;
+                    item.pos.heightPct = availH;
+                    item.pos.xPct = mPctX + col * (w + 2);
+                    item.pos.yPct = mPctY;
+                });
+            } else if (layoutKey === '3-v') {
+                const h = (availH - 4) / 3;
+                activeItems.forEach((item, idx) => {
+                    const row = idx % 3;
+                    item.pos.widthPct = availW;
+                    item.pos.heightPct = h;
+                    item.pos.xPct = mPctX;
+                    item.pos.yPct = mPctY + row * (h + 2);
+                });
+            } else if (layoutKey === '4') {
+                // 2x2 Grid
+                const w = (availW - 2) / 2;
+                const h = (availH - 2) / 2;
+                activeItems.forEach((item, idx) => {
+                    const col = idx % 2;
+                    const row = Math.floor((idx % 4) / 2);
+                    item.pos.widthPct = w;
+                    item.pos.heightPct = h;
+                    item.pos.xPct = mPctX + col * (w + 2);
+                    item.pos.yPct = mPctY + row * (h + 2);
+                });
+            } else if (layoutKey === '6') {
+                // 2x3 Grid
+                const w = (availW - 2) / 2;
+                const h = (availH - 4) / 3;
+                activeItems.forEach((item, idx) => {
+                    const col = idx % 2;
+                    const row = Math.floor((idx % 6) / 2);
+                    item.pos.widthPct = w;
+                    item.pos.heightPct = h;
+                    item.pos.xPct = mPctX + col * (w + 2);
+                    item.pos.yPct = mPctY + row * (h + 2);
+                });
+            } else if (layoutKey === '8') {
+                // 2x4 Grid
+                const w = (availW - 2) / 2;
+                const h = (availH - 6) / 4;
+                activeItems.forEach((item, idx) => {
+                    const col = idx % 2;
+                    const row = Math.floor((idx % 8) / 2);
+                    item.pos.widthPct = w;
+                    item.pos.heightPct = h;
+                    item.pos.xPct = mPctX + col * (w + 2);
+                    item.pos.yPct = mPctY + row * (h + 2);
+                });
+            } else if (layoutKey === 'all') {
+                const n = activeItems.length;
+                let cols = 1; let rows = 1;
+                if (n === 2) { cols = orientation === 'landscape' ? 2 : 1; rows = orientation === 'landscape' ? 1 : 2; }
+                else if (n <= 4) { cols = 2; rows = 2; }
+                else if (n <= 6) { cols = 2; rows = 3; }
+                else { cols = 3; rows = Math.ceil(n / 3); }
+
+                const w = (availW - (cols - 1) * 2) / cols;
+                const h = (availH - (rows - 1) * 2) / rows;
+                activeItems.forEach((item, idx) => {
+                    const c = idx % cols;
+                    const r = Math.floor(idx / cols);
+                    item.pos.widthPct = w;
+                    item.pos.heightPct = h;
+                    item.pos.xPct = mPctX + c * (w + 2);
+                    item.pos.yPct = mPctY + r * (h + 2);
+                });
+            }
+        }
+
+        // ═══════════ SIZE PRESET HANDLER ═══════════
+        function applySizePreset(preset) {
+            activeItems = getFlattenedActiveItems();
+            if (!activeItems[selectedItemIndex]) return;
+            const target = activeItems[selectedItemIndex];
+            const { widthMm: paperW, heightMm: paperH } = getActivePaperDimensions();
+
+            if (preset === 'id-card') {
+                // 86mm x 54mm (Standard Aadhaar/Pan/ID card)
+                target.pos.widthPct = (86 / paperW) * 100;
+                target.pos.heightPct = (54 / paperH) * 100;
+            } else if (preset === 'passport') {
+                // 35mm x 45mm
+                target.pos.widthPct = (35 / paperW) * 100;
+                target.pos.heightPct = (45 / paperH) * 100;
+            } else if (preset === '4x6') {
+                // 101.6mm x 152.4mm
+                target.pos.widthPct = (101.6 / paperW) * 100;
+                target.pos.heightPct = (152.4 / paperH) * 100;
+            } else if (preset === '5x7') {
+                // 127mm x 177.8mm
+                target.pos.widthPct = (127 / paperW) * 100;
+                target.pos.heightPct = (177.8 / paperH) * 100;
+            } else if (preset === 'full') {
+                target.pos.widthPct = 100;
+                target.pos.heightPct = 100;
+                target.pos.xPct = 0;
+                target.pos.yPct = 0;
+            } else if (preset === 'fit') {
+                const mPctX = (activeMarginMm / paperW) * 100;
+                const mPctY = (activeMarginMm / paperH) * 100;
+                target.pos.widthPct = 100 - (mPctX * 2);
+                target.pos.heightPct = 100 - (mPctY * 2);
+                target.pos.xPct = mPctX;
+                target.pos.yPct = mPctY;
+            }
+
+            renderCanvas();
+        }
+
+        function scaleActivePhoto(factor) {
+            activeItems = getFlattenedActiveItems();
+            if (!activeItems[selectedItemIndex]) return;
+            const target = activeItems[selectedItemIndex];
+
+            const baseW = target.pos.widthPct;
+            const baseH = target.pos.heightPct;
+
+            target.pos.widthPct = Math.min(100, Math.max(10, baseW * factor));
+            target.pos.heightPct = Math.min(100, Math.max(10, baseH * factor));
+
+            renderCanvas();
+        }
+
+        // ═══════════ CANVAS RENDERING ═══════════
+        function renderCanvas() {
+            const container = document.getElementById('sheetsContainer');
+            activeItems = getFlattenedActiveItems();
+            const fitMode = document.querySelector('input[name="imgFit"]:checked').value;
+            const layoutKey = document.getElementById('layoutSelect').value;
+
+            if (activeItems.length === 0) {
+                container.innerHTML = '<div style="color: #747d8c; margin-top: 50px;">No images selected. Check thumbnails on the left.</div>';
+                document.getElementById('canvasSummary').innerText = '0 Photos';
+                return;
+            }
+
+            // Real physical paper dimensions & preview pixel scaling
+            const paperDef = getActivePaperDef();
+            const { widthMm: paperW_mm, heightMm: paperH_mm } = getActivePaperDimensions();
+
+            // Screen scale: 520px standard width for 210mm
+            const scalePxPerMm = 2.47619;
+            const sheetW_px = Math.round(paperW_mm * scalePxPerMm);
+            const sheetH_px = Math.round(paperH_mm * scalePxPerMm);
+            const marginPx = Math.round(activeMarginMm * scalePxPerMm);
+
+            // Group images by page
+            let perPage = 1;
+            if (layoutKey === 'custom' || layoutKey === '1') perPage = 1;
+            else if (layoutKey === '2-h' || layoutKey === '2-v') perPage = 2;
+            else if (layoutKey === '3-h' || layoutKey === '3-v') perPage = 3;
+            else if (layoutKey === '4') perPage = 4;
+            else if (layoutKey === '6') perPage = 6;
+            else if (layoutKey === '8') perPage = 8;
+            else if (layoutKey === 'all') perPage = activeItems.length;
+
+            const pages = [];
+            for (let i = 0; i < activeItems.length; i += perPage) {
+                pages.push(activeItems.slice(i, i + perPage));
+            }
+
+            let sheetsHtml = '';
+
+            pages.forEach((pageItems, pageIdx) => {
+                let itemsHtml = '';
+
+                pageItems.forEach((item, idxInPage) => {
+                    const globalIdx = activeItems.indexOf(item);
+                    const isSelected = globalIdx === selectedItemIndex;
+                    const selectedClass = isSelected ? ' selected' : '';
+
+                    let fitClass = '';
+                    if (fitMode === 'cover') fitClass = ' fit-cover';
+                    else if (fitMode === 'stretch') fitClass = ' fit-stretch';
+
+                    const copyTag = item.totalCopies > 1 ? ` (${item.copyIndex + 1}/${item.totalCopies})` : '';
+
+                    itemsHtml += `
+                        <div class="photo-item${selectedClass}${fitClass}"
+                             id="item_${item.instanceKey}"
+                             data-key="${item.instanceKey}"
+                             data-idx="${globalIdx}"
+                             style="left: ${item.pos.xPct}%; top: ${item.pos.yPct}%; width: ${item.pos.widthPct}%; height: ${item.pos.heightPct}%;"
+                             onmousedown="startDrag(event, '${item.instanceKey}', ${globalIdx})">
+                            <img src="${item.dataUrl}" style="transform: rotate(${item.rotation}deg);" alt="">
+                            <div class="item-info-badge">#${item.sourceIndex + 1}${copyTag} · ${Math.round(item.pos.xPct * (paperW_mm / 100))}mm, ${Math.round(item.pos.yPct * (paperH_mm / 100))}mm</div>
+                        </div>
+                    `;
+                });
+
+                sheetsHtml += `
+                    <div class="paper-sheet ${orientation}" style="width: ${sheetW_px}px; height: ${sheetH_px}px;">
+                        <div class="paper-margin-guide" style="top: ${marginPx}px; left: ${marginPx}px; right: ${marginPx}px; bottom: ${marginPx}px;"></div>
+                        ${itemsHtml}
+                        <div class="sheet-label">Sheet ${pageIdx + 1} of ${pages.length} · ${paperDef.label}</div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = sheetsHtml;
+
+            const summaryText = `${pages.length} Page${pages.length > 1 ? 's' : ''} · ${activeItems.length} Photo${activeItems.length > 1 ? 's' : ''} · ${paperDef.label}`;
+            document.getElementById('canvasSummary').innerHTML = `<b>${summaryText}</b>`;
+            if (activeItems[selectedItemIndex]) {
+                const cur = activeItems[selectedItemIndex];
+                const copyTag = cur.totalCopies > 1 ? ` (${cur.copyIndex + 1}/${cur.totalCopies})` : '';
+                document.getElementById('activePhotoTag').innerText = `#${cur.sourceIndex + 1}${copyTag} Selected`;
+            }
+        }
+
+        // ═══════════ MOUSE DRAG INTERACTION ═══════════
+        let isDragging = false;
+        let dragTarget = null;
+        let startMouseX = 0;
+        let startMouseY = 0;
+        let startXPct = 0;
+        let startYPct = 0;
+        let sheetWidth = 1;
+        let sheetHeight = 1;
+
+        function startDrag(e, instanceKey, globalIdx) {
+            e.stopPropagation();
+            selectedItemIndex = globalIdx;
+
+            activeItems = getFlattenedActiveItems();
+            dragTarget = activeItems.find(it => it.instanceKey === instanceKey);
+            if (!dragTarget) return;
+
+            isDragging = true;
+            startMouseX = e.clientX;
+            startMouseY = e.clientY;
+            startXPct = dragTarget.pos.xPct;
+            startYPct = dragTarget.pos.yPct;
+
+            const sheetEl = e.currentTarget.closest('.paper-sheet');
+            if (sheetEl) {
+                const rect = sheetEl.getBoundingClientRect();
+                sheetWidth = rect.width;
+                sheetHeight = rect.height;
+            }
+
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+
+            renderCanvas();
+        }
+
+        function onMouseMove(e) {
+            if (!isDragging || !dragTarget) return;
+
+            const deltaX = e.clientX - startMouseX;
+            const deltaY = e.clientY - startMouseY;
+
+            const deltaXPct = (deltaX / sheetWidth) * 100;
+            const deltaYPct = (deltaY / sheetHeight) * 100;
+
+            // Update photo coordinates
+            dragTarget.pos.xPct = Math.round((startXPct + deltaXPct) * 10) / 10;
+            dragTarget.pos.yPct = Math.round((startYPct + deltaYPct) * 10) / 10;
+
+            // Direct DOM update for 60fps buttery smooth dragging
+            const el = document.getElementById(`item_${dragTarget.instanceKey}`);
+            if (el) {
+                el.style.left = dragTarget.pos.xPct + '%';
+                el.style.top = dragTarget.pos.yPct + '%';
+                const badge = el.querySelector('.item-info-badge');
+                if (badge) {
+                    const { widthMm: paperW_mm, heightMm: paperH_mm } = getActivePaperDimensions();
+                    const copyTag = dragTarget.totalCopies > 1 ? ` (${dragTarget.copyIndex + 1}/${dragTarget.totalCopies})` : '';
+                    badge.innerText = `#${dragTarget.sourceIndex + 1}${copyTag} · ${Math.round(dragTarget.pos.xPct * (paperW_mm / 100))}mm, ${Math.round(dragTarget.pos.yPct * (paperH_mm / 100))}mm`;
+                }
+            }
+        }
+
+        function onMouseUp() {
+            if (isDragging) {
+                isDragging = false;
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+                renderCanvas();
+            }
+        }
+
+        // ═══════════ KEYBOARD ARROW NUDGING ═══════════
+        function setupGlobalKeyboard() {
+            window.addEventListener('keydown', (e) => {
+                if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+                    e.preventDefault();
+
+                    // Step size: 1% normal, 4% with Shift, 0.2% with Alt/Ctrl
+                    let step = 1;
+                    if (e.shiftKey) step = 4;
+                    if (e.ctrlKey || e.altKey) step = 0.2;
+
+                    let dx = 0; let dy = 0;
+                    if (e.key === 'ArrowLeft') dx = -step;
+                    if (e.key === 'ArrowRight') dx = step;
+                    if (e.key === 'ArrowUp') dy = -step;
+                    if (e.key === 'ArrowDown') dy = step;
+
+                    nudgeActive(dx, dy);
+                }
+            });
+        }
+
+        function nudgeActive(dxPct, dyPct) {
+            activeItems = getFlattenedActiveItems();
+            if (!activeItems[selectedItemIndex]) return;
+            const target = activeItems[selectedItemIndex];
+
+            target.pos.xPct = Math.round((target.pos.xPct + dxPct) * 10) / 10;
+            target.pos.yPct = Math.round((target.pos.yPct + dyPct) * 10) / 10;
+
+            renderCanvas();
+        }
+
+        // ═══════════ QUICK ALIGNMENTS ═══════════
+        function centerActive() {
+            activeItems = getFlattenedActiveItems();
+            if (!activeItems[selectedItemIndex]) return;
+            const target = activeItems[selectedItemIndex];
+
+            target.pos.xPct = (100 - target.pos.widthPct) / 2;
+            target.pos.yPct = (100 - target.pos.heightPct) / 2;
+            renderCanvas();
+        }
+
+        function alignActive(direction) {
+            activeItems = getFlattenedActiveItems();
+            if (!activeItems[selectedItemIndex]) return;
+            const target = activeItems[selectedItemIndex];
+            const { widthMm: paperW, heightMm: paperH } = getActivePaperDimensions();
+            const mPctX = (activeMarginMm / paperW) * 100;
+            const mPctY = (activeMarginMm / paperH) * 100;
+
+            if (direction === 'top') target.pos.yPct = mPctY;
+            if (direction === 'bottom') target.pos.yPct = 100 - mPctY - target.pos.heightPct;
+            if (direction === 'center-h') target.pos.xPct = (100 - target.pos.widthPct) / 2;
+            if (direction === 'center-v') target.pos.yPct = (100 - target.pos.heightPct) / 2;
+
+            renderCanvas();
+        }
+
+        // ═══════════ PRINT EXECUTION ═══════════
+        async function doPrint() {
+            const isLandscape = orientation === 'landscape';
+            const paperSize = document.getElementById('paperSizeSelect').value;
+
+            await window.printAPI.triggerPrint({
+                landscape: isLandscape,
+                paperSize: paperSize
+            });
+        }
+
+        function doCancel() {
+            window.printAPI.closeWindow();
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const d = document.createElement('div');
+            d.innerText = text;
+            return d.innerHTML;
+        }
+
+        init();
+    </script>
+</body>
+</html>

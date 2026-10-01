@@ -22,6 +22,7 @@ async function logEvent(eventType, details = {}) {
   block += '\n';
 
   try {
+    await fs.mkdir(todayDir, { recursive: true });
     await fs.appendFile(logPath, block, 'utf8');
   } catch (err) {
     // If the directory/file doesn't exist yet, log to console as fallback

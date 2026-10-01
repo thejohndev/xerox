@@ -153,6 +153,24 @@
             background: #e03b4a;
         }
 
+        .btn-reset {
+            background: #ffffff;
+            color: #57606f;
+            border: 1px solid #ced6e0;
+            padding: 10px 18px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .btn-reset:hover {
+            background: #f1f2f6;
+            color: #1e90ff;
+            border-color: #1e90ff;
+        }
+
         .btn-open-today {
             background: #ffffff;
             color: #2f3542;
@@ -338,6 +356,23 @@
             color: #2f3542;
         }
 
+        .btn-print-batch {
+            background: #ffffff;
+            border: 1px solid #0984e3;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #0984e3;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.15s;
+        }
+
+        .btn-print-batch:hover {
+            background: #0984e3;
+            color: #ffffff;
+        }
+
         /* File Tree Branch (Node Children) */
         .file-tree {
             padding: 4px 0;
@@ -423,6 +458,24 @@
             text-align: right;
         }
 
+        .btn-file-print {
+            background: #ffffff;
+            color: #0984e3;
+            border: 1px solid #74b9ff;
+            padding: 3px 9px;
+            font-size: 11.5px;
+            font-weight: 600;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .btn-file-print:hover {
+            background: #0984e3;
+            color: #ffffff;
+            border-color: #0984e3;
+        }
+
         .btn-file-open {
             background: #f1f2f6;
             color: #1e90ff;
@@ -503,6 +556,7 @@
     <div class="controls">
         <button id="btnStart" class="btn-start">▶ START</button>
         <button id="btnStop" class="btn-stop" disabled>⏹ STOP</button>
+        <button id="btnReset" class="btn-reset" title="Wipe session and generate new QR code">🔄 New QR Code</button>
         <button id="btnOpenToday" class="btn-open-today">📁 Open Today's Folder</button>
     </div>
 
@@ -532,6 +586,7 @@
         const btnBrowse = document.getElementById('btnBrowse');
         const btnStart = document.getElementById('btnStart');
         const btnStop = document.getElementById('btnStop');
+        const btnReset = document.getElementById('btnReset');
         const btnOpenToday = document.getElementById('btnOpenToday');
         const statusBadge = document.getElementById('statusBadge');
         const qrCard = document.getElementById('qrCard');
@@ -595,6 +650,13 @@
                     btnStart.disabled = true;
                     btnStop.disabled = false;
                     break;
+                case 'logged_out':
+                    statusBadge.classList.add('badge-disconnected');
+                    statusBadge.innerText = '● Logged Out (Generating QR...)';
+                    btnStart.disabled = true;
+                    btnStop.disabled = false;
+                    qrCard.style.display = 'none';
+                    break;
                 case 'stopped':
                 case 'disconnected':
                 default:
@@ -642,9 +704,12 @@
             }, 2000);
         }
 
+        let currentBatches = [];
+
         // 5. Render Tree View (Customer -> Files)
         function renderBatches(batches) {
-            if (!batches || batches.length === 0) {
+            currentBatches = batches || [];
+            if (!currentBatches || currentBatches.length === 0) {
                 batchCountBadge.innerText = '0 Customers';
                 fileCountBadge.innerText = '0 Files';
                 batchTreeList.innerHTML = '<p class="empty-state">No files received yet today.</p>';
@@ -652,26 +717,25 @@
             }
 
             let totalFiles = 0;
-            batches.forEach(b => { totalFiles += (b.files ? b.files.length : 0); });
+            currentBatches.forEach(b => { totalFiles += (b.files ? b.files.length : 0); });
 
-            batchCountBadge.innerText = `${batches.length} Customer${batches.length === 1 ? '' : 's'}`;
+            batchCountBadge.innerText = `${currentBatches.length} Customer${currentBatches.length === 1 ? '' : 's'}`;
             fileCountBadge.innerText = `${totalFiles} File${totalFiles === 1 ? '' : 's'}`;
 
-            batchTreeList.innerHTML = batches.map(batch => {
+            batchTreeList.innerHTML = currentBatches.map((batch, bIdx) => {
                 const isCollapsed = collapsedBatches.has(batch.folderName);
                 const arrow = isCollapsed ? '▶' : '▼';
                 const treeClass = isCollapsed ? 'file-tree collapsed' : 'file-tree';
                 const fileCountText = `${batch.files.length} file${batch.files.length === 1 ? '' : 's'}`;
 
                 const filesHtml = (batch.files && batch.files.length > 0)
-                    ? batch.files.map((file, idx) => {
-                        const isLast = idx === batch.files.length - 1;
+                    ? batch.files.map((file, fIdx) => {
+                        const isLast = fIdx === batch.files.length - 1;
                         const branch = isLast ? '└──' : '├──';
                         const icon = getFileIcon(file.ext);
-                        const safePath = encodeURIComponent(file.fullPath);
 
                         return `
-                            <div class="file-tree-item" title="Click to open file" onclick="handleFileClick(event, '${safePath}')">
+                            <div class="file-tree-item" title="Click to open file" onclick="handleFileClickByIndex(event, ${bIdx}, ${fIdx})">
                                 <div class="file-main-info">
                                     <span class="tree-line">${branch}</span>
                                     <span class="file-icon">${icon}</span>
@@ -680,18 +744,17 @@
                                 <div class="file-meta-info">
                                     <span class="file-size-text">${formatBytes(file.size)}</span>
                                     <span class="file-time-text">${file.time || ''}</span>
-                                    <button class="btn-file-open" onclick="handleFileClick(event, '${safePath}')">Open ↗</button>
+                                    <button class="btn-file-print" title="Print this file" onclick="handleFilePrintClick(event, ${bIdx}, ${fIdx})">🖨️ Print</button>
+                                    <button class="btn-file-open" onclick="handleFileClickByIndex(event, ${bIdx}, ${fIdx})">Open ↗</button>
                                 </div>
                             </div>
                         `;
                     }).join('')
                     : `<div style="padding: 10px 36px; color: #a4b0be; font-size: 13px;">No files in this batch yet.</div>`;
 
-                const safeFolderPath = encodeURIComponent(batch.folderPath);
-
                 return `
                     <div class="batch-card" data-batch="${escapeHtml(batch.folderName)}">
-                        <div class="batch-header" onclick="toggleBatch('${escapeHtml(batch.folderName)}')">
+                        <div class="batch-header" onclick="toggleBatchByIndex(${bIdx})">
                             <div class="batch-title-group">
                                 <span class="toggle-arrow" id="arrow-${escapeHtml(batch.folderName)}">${arrow}</span>
                                 <span class="batch-name">👤 ${escapeHtml(batch.customerName)}</span>
@@ -699,7 +762,8 @@
                             </div>
                             <div class="batch-actions">
                                 <span class="batch-file-badge">${fileCountText}</span>
-                                <button class="btn-open-folder-icon" title="Open customer folder" onclick="handleFolderClick(event, '${safeFolderPath}')">📁 Open Folder</button>
+                                <button class="btn-print-batch" title="Print files" onclick="handlePrintBatchClick(event, ${bIdx})">🖨️ Print</button>
+                                <button class="btn-open-folder-icon" title="Open customer folder" onclick="handleFolderClickByIndex(event, ${bIdx})">📁 Open Folder</button>
                             </div>
                         </div>
                         <div class="${treeClass}" id="tree-${escapeHtml(batch.folderName)}">
@@ -710,8 +774,11 @@
             }).join('');
         }
 
-        // Toggle Expand/Collapse for a Customer
-        function toggleBatch(folderName) {
+        // Toggle Expand/Collapse for a Customer by index
+        function toggleBatchByIndex(bIdx) {
+            const batch = currentBatches[bIdx];
+            if (!batch) return;
+            const folderName = batch.folderName;
             const tree = document.getElementById(`tree-${folderName}`);
             const arrow = document.getElementById(`arrow-${folderName}`);
 
@@ -729,25 +796,79 @@
         }
 
         // Open a file directly in Windows
-        async function handleFileClick(event, encodedPath) {
+        async function handleFileClickByIndex(event, bIdx, fIdx) {
             event.stopPropagation();
-            const filePath = decodeURIComponent(encodedPath);
-            showToast('Opening ' + filePath.split('\\').pop() + '...');
+            const batch = currentBatches[bIdx];
+            if (!batch || !batch.files || !batch.files[fIdx]) return;
+            const file = batch.files[fIdx];
+            showToast('Opening ' + file.name + '...');
             try {
-                await window.electronAPI.openFile(filePath);
+                await window.electronAPI.openFile(file.fullPath);
             } catch (err) {
                 console.error('Error opening file:', err);
             }
         }
 
         // Open a customer folder in Windows Explorer
-        async function handleFolderClick(event, encodedPath) {
+        async function handleFolderClickByIndex(event, bIdx) {
             event.stopPropagation();
-            const folderPath = decodeURIComponent(encodedPath);
+            const batch = currentBatches[bIdx];
+            if (!batch) return;
             try {
-                await window.electronAPI.openFolder(folderPath);
+                await window.electronAPI.openFolder(batch.folderPath);
             } catch (err) {
                 console.error('Error opening folder:', err);
+            }
+        }
+
+        // Open print preview for a customer batch
+        async function handlePrintBatchClick(event, bIdx) {
+            event.stopPropagation();
+            const batch = currentBatches[bIdx];
+            if (!batch) return;
+            showToast('Opening print preview...');
+            try {
+                await window.electronAPI.openPrintWindow({
+                    folderName: batch.folderName,
+                    folderPath: batch.folderPath,
+                    customerName: batch.customerName,
+                    phone: batch.phone,
+                    files: batch.files,
+                });
+            } catch (err) {
+                console.error('Error opening print:', err);
+            }
+        }
+
+        // Print individual file (PDF directly or single image in Print Studio)
+        async function handleFilePrintClick(event, bIdx, fIdx) {
+            event.stopPropagation();
+            const batch = currentBatches[bIdx];
+            if (!batch || !batch.files || !batch.files[fIdx]) return;
+            const file = batch.files[fIdx];
+            const isPdf = (file.ext || '').toLowerCase() === '.pdf';
+
+            if (isPdf) {
+                showToast('Opening PDF for printing: ' + file.name);
+                try {
+                    await window.electronAPI.printPdf({ filePath: file.fullPath, fileName: file.name });
+                } catch (err) {
+                    console.error('Error opening PDF print:', err);
+                }
+            } else {
+                showToast('Opening photo in Print Studio...');
+                try {
+                    const singleBatch = {
+                        folderName: batch.folderName,
+                        folderPath: batch.folderPath,
+                        customerName: batch.customerName,
+                        phone: batch.phone,
+                        files: [file],
+                    };
+                    await window.electronAPI.openPrintWindow(singleBatch);
+                } catch (err) {
+                    console.error('Error opening single photo print:', err);
+                }
             }
         }
 
@@ -787,6 +908,14 @@
             btnStop.disabled = true;
             await window.electronAPI.stopService();
             setStatus('stopped');
+        });
+
+        btnReset.addEventListener('click', async () => {
+            if (confirm('Do you want to reset WhatsApp and scan a fresh QR code?')) {
+                setStatus('connecting');
+                showToast('Resetting session for new QR code...');
+                await window.electronAPI.resetService();
+            }
         });
 
         btnOpenToday.addEventListener('click', async () => {

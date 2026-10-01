@@ -499,7 +499,7 @@ async function startWhatsApp() {
     if (connection === 'close') {
       currentSocket = null;
       const statusCode = lastDisconnect?.error?.output?.statusCode;
-      const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+      const isLoggedOut = statusCode === DisconnectReason.loggedOut || statusCode === 401;
 
       if (isManualStopped) {
         console.log('[WHATSAPP] Stopped cleanly.');
@@ -507,24 +507,36 @@ async function startWhatsApp() {
         return;
       }
 
-      console.log(`[WHATSAPP] Disconnected. Status: ${statusCode}. Reconnecting: ${shouldReconnect}`);
-      whatsappEvents.emit('status', shouldReconnect ? 'reconnecting' : 'disconnected');
+      console.log(`[WHATSAPP] Disconnected. Status: ${statusCode}. Logged out: ${isLoggedOut}`);
+
+      if (isLoggedOut) {
+        console.log('[WHATSAPP] Session logged out or revoked. Clearing credentials...');
+        await clearAuthDir();
+        await logger.logEvent('WHATSAPP_LOGGED_OUT');
+        whatsappEvents.emit('status', 'connecting');
+
+        if (!isManualStopped) {
+          console.log('[WHATSAPP] Generating fresh QR code in 1.5 seconds...');
+          reconnectTimer = setTimeout(() => {
+            if (!isManualStopped) {
+              startWhatsApp();
+            }
+          }, 1500);
+        }
+        return;
+      }
+
       await logger.logEvent('WHATSAPP_DISCONNECTED', {
         StatusCode: statusCode || 'unknown',
-        Reconnecting: shouldReconnect ? 'yes' : 'no',
+        Reconnecting: 'yes',
       });
 
-      if (shouldReconnect) {
-        reconnectTimer = setTimeout(() => {
-          if (!isManualStopped) {
-            startWhatsApp();
-          }
-        }, 3000);
-      } else {
-        console.log('[WHATSAPP] Logged out. Please restart and scan QR code again.');
-        whatsappEvents.emit('status', 'logged_out');
-        await logger.logEvent('WHATSAPP_LOGGED_OUT');
-      }
+      whatsappEvents.emit('status', 'reconnecting');
+      reconnectTimer = setTimeout(() => {
+        if (!isManualStopped) {
+          startWhatsApp();
+        }
+      }, 3000);
     }
   });
 
@@ -606,6 +618,34 @@ async function stopWhatsApp() {
 }
 
 /**
+ * Clear all files in the auth directory to wipe stale credentials.
+ */
+async function clearAuthDir() {
+  try {
+    const fs = require('fs/promises');
+    const authDir = config.AUTH_DIR;
+    await fs.mkdir(authDir, { recursive: true });
+    const entries = await fs.readdir(authDir);
+    for (const file of entries) {
+      await fs.rm(path.join(authDir, file), { recursive: true, force: true });
+    }
+    console.log('[AUTH] Successfully cleared auth directory.');
+  } catch (err) {
+    console.error(`[AUTH] Failed to clear auth directory: ${err.message}`);
+  }
+}
+
+/**
+ * Reset WhatsApp session completely and request fresh QR code.
+ */
+async function resetSession() {
+  await stopWhatsApp();
+  await clearAuthDir();
+  console.log('[WHATSAPP] Session reset requested. Starting fresh...');
+  await startWhatsApp();
+}
+
+/**
  * Check if WhatsApp socket is currently active.
  */
 function isWhatsAppRunning() {
@@ -616,5 +656,7 @@ module.exports = {
   startWhatsApp,
   stopWhatsApp,
   isWhatsAppRunning,
+  clearAuthDir,
+  resetSession,
   whatsappEvents,
 };
